@@ -1,204 +1,88 @@
 #pragma once
-#include "Baza_danych.h"
+#include "Apteka.h"
 
 class Interface
 {
 private:
-	Baza_danych bd;
+	Apteka apteka;
 
 public:
-	Interface(string pzz, string pzo, string pzka) : bd(pzz, pzo, pzka) {}
-
-	bool Logowanie()
+	Interface(string pzz, string pzo, string pzka) : apteka(pzz, pzo, pzka)
 	{
-		string nazwa_uzytkownika;
-		string haslo;
-
-		cout << "Podaj nazwe uzytkownika i haslo w formacie nazwa_uz haslo(ENTER) ";
-		cin >> nazwa_uzytkownika >> haslo;
-
-		vector<Dane_aptekarzy> lista_aptekarzy = bd.DawajDaneAptekarzy();
-
-		for (Dane_aptekarzy i : lista_aptekarzy)
-		{
-			if (i.nazwa_uzytkownika == nazwa_uzytkownika && i.haslo == haslo)
-			{
-				return true;
-			}
-		}
-
-		return false;
+		;
 	}
 
-	void KupLek()
+	void DzialajProgramiku()
 	{
-		int typ_leku;
-		int j = 0;
-		string ktory_lek;
+		int wybor;
 
-		cout << "Podaj typ leku, ktory chcesz kupic: ";
-		cin >> typ_leku;
+		cout << "Witaj w aptece, co chcesz zrobic" << endl;
+		cout << "1. Zaloguj sie jako aptekarz" << endl;
+		cout << "2. Zakup lek" << endl;
+		cin >> wybor;
 
-		vector<Dane_leku> lista_lekow = bd.DawajListeLekow();
-
-		for (Dane_leku i : lista_lekow)
+		while (wybor == 1 || wybor == 2)
 		{
-			if (i.typ == typ_leku)
+			if (wybor == 1)
 			{
-				j++;
-				cout << j << ". Lek: " << i.nazwa << endl << "Podany typ: " << typ_leku << endl << "Dostepnosc w ilosci: " << i.ilosc << endl;
-			}
-		}
-
-		cout << "Wybierz nazwe leku, ktory chcesz kupic i kliknij ENTER(nawet jezeli go nie ma), jezeli sie rozmysliles, wcisnij cokolwiek innego i ENTER ";
-
-		cin >> ktory_lek;
-
-		for (Dane_leku& i : lista_lekow)
-		{
-			if (i.nazwa == ktory_lek)
-			{
-				if (i.ilosc > 0)
+				if (apteka.Logowanie())
 				{
-					i.ilosc--;
+					system("cls");
+					cout << "Co chcesz zrobic" << endl;
+					cout << "1. Wyswietl zasoby" << endl;
+					cout << "2. Wyswietl liste oczekujacych na leki" << endl;
+					cout << "3. Wyswietl liste_aptekarzy" << endl;
+					cout << "4. Uzupelnij zasoby" << endl;
+					cout << "5. Wyloguj" << endl;
+					cin >> wybor;
+					system("cls");
 
-					cout << "Zakupiono lek!" << endl;
-
-					bd.ZaktualizujZasoby(lista_lekow);
-					return;
-				}
-				else if (i.ilosc == 0)
-				{
-					DodawanieDoListyOczekujacych(ktory_lek);
-					return;
-				}
-			}
-		}
-	}
-
-	void DodawanieDoListyOczekujacych(string nazwa_leku)
-	{
-		cout << "Czy chcesz zostac dodanym do oczekujacych na " << nazwa_leku << "? Jezeli tak napisz tak i wcisnij ENTER: ";
-		string odpowiedz;
-		string mail;
-		cin >> odpowiedz;
-
-		if (odpowiedz == "tak")
-		{
-			cout << "Podaj swoj mail: ";
-			cin >> mail;
-
-			vector<Oczekujacy_na_lek> lista_oczekujacych = bd.DawajListeOczekujacych();
-
-			for (Oczekujacy_na_lek& i : lista_oczekujacych)
-			{
-				if (i.nazwa_leku == nazwa_leku)
-				{
-					i.lista_maili_oczekujacych.push_back(mail);
-
-					cout << "Dodano maila" << endl;
-
-					bd.AktualizujOczekujacych(lista_oczekujacych);
-					break;
-				}
-			}
-		}
-	}
-
-	void UzupelnijZasoby()
-	{
-		vector<Dane_leku> lista_lekow = bd.DawajListeLekow();
-		vector<string> lista_uzupelnionych_lekow;
-		int ile_uzupelnic;
-
-		for (Dane_leku& i : lista_lekow)
-		{
-			if (i.ilosc == 0)
-			{
-				do
-				{
-					cout << "W jakiej ilosci chcesz uzupelnic " << i.nazwa << " (wartosci >= 0): ";
-					cin >> ile_uzupelnic;
-
-					if (cin.fail() || ile_uzupelnic < 0)
+					while (wybor == 1 || wybor == 2 || wybor == 3 || wybor == 4)
 					{
-						cin.clear();
-						cin.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
+						if (wybor == 1)
+						{
+							apteka.WyswietlZasoby();
+						}
+						else if (wybor == 2)
+						{
+							apteka.WyswietlOczekujacych();
+						}
+						else if (wybor == 3)
+						{
+							apteka.WyswietlAptekarzy();
+						}
+						else if (wybor == 4)
+						{
+							apteka.UzupelnijZasoby();
+						}
 
-						cout << "Blad! Wprowadz poprawna liczbe wieksza lub rowna 0." << endl;
-					}
-				} while (cin.fail() || ile_uzupelnic < 0);
-
-				if (ile_uzupelnic > 0)
-				{
-					i.ilosc = ile_uzupelnic;
-					lista_uzupelnionych_lekow.push_back(i.nazwa);
-					cout << "Uzupelniono " << i.nazwa << "(" << ile_uzupelnic << " sztuk)" << endl;
-				}
-			}
-		}
-		bd.ZaktualizujZasoby(lista_lekow);
-
-		PowiadomLudzi(lista_uzupelnionych_lekow);
-	}
-
-	void PowiadomLudzi(vector<string> lista_uzupelnionych_lekow)
-	{
-		vector<Oczekujacy_na_lek> lista_oczekujacych = bd.DawajListeOczekujacych();
-
-		for (string lek : lista_uzupelnionych_lekow)
-		{
-			for (Oczekujacy_na_lek& i : lista_oczekujacych)
-			{
-				if (lek == i.nazwa_leku)
-				{
-					for (string mail : i.lista_maili_oczekujacych)
-					{
-						cout << "Powiadamiam " << mail << " o dostepnosci leku " << lek << endl;
+						cout << "Co chcesz zrobic" << endl;
+						cout << "1. Wyswietl zasoby" << endl;
+						cout << "2. Wyswietl liste oczekujacych na leki" << endl;
+						cout << "3. Wyswietl liste_aptekarzy" << endl;
+						cout << "4. Uzupelnij zasoby" << endl;
+						cout << "5. Wyloguj" << endl;
+						cin >> wybor;
+						system("cls");
 					}
 
-					i.lista_maili_oczekujacych.clear();
+				}
+				else
+				{
+					system("cls");
+					cout << "Bledne dane" << endl;
 				}
 			}
-		}
-
-		bd.AktualizujOczekujacych(lista_oczekujacych);
-	}
-
-	void WyswietlZasoby()
-	{
-		vector<Dane_leku> lista = bd.DawajListeLekow();
-
-		for (Dane_leku i : lista)
-		{
-			cout << i.nazwa << ", typ " << i.typ << endl << "Ilosc na stanie: " << i.ilosc << endl;
-		}
-	}
-
-	void WyswietlOczekujacych()
-	{
-		vector<Oczekujacy_na_lek> lista = bd.DawajListeOczekujacych();
-
-		for (Oczekujacy_na_lek i : lista)
-		{
-			cout << i.nazwa_leku << endl << "Lista Oczekujacych na ten lek:" << endl;
-
-			for (string j : i.lista_maili_oczekujacych)
+			else if (wybor == 2)
 			{
-				cout << j << ", ";
+				apteka.KupLek();
 			}
 
-			cout << endl << endl;
-		}
-	}
-
-	void WyswietlAptekarzy()
-	{
-		vector<Dane_aptekarzy> lista = bd.DawajDaneAptekarzy();
-
-		for (Dane_aptekarzy i : lista)
-		{
-			cout << "Aptekarz: " << i.nazwa_uzytkownika << ", haslo to " << i.haslo << endl;
+			cout << "Witaj w aptece, co chcesz zrobic" << endl;
+			cout << "1. Zaloguj sie jako aptekarz" << endl;
+			cout << "2. Zakup lek" << endl;
+			cin >> wybor;
+			system("cls");
 		}
 	}
 };
